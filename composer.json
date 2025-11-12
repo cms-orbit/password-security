@@ -1,0 +1,48 @@
+{
+    "name": "cms-orbit/password-security",
+    "description": "Laravel password security package with comprehensive validation rules for strong password policies",
+    "keywords": ["laravel", "password", "security", "validation", "authentication"],
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "CMS Orbit",
+            "email": "dev@cms-orbit.com"
+        }
+    ],
+    "require": {
+        "php": "^8.2",
+        "illuminate/support": "^9.0|^10.0|^11.0",
+        "illuminate/database": "^9.0|^10.0|^11.0",
+        "illuminate/validation": "^9.0|^10.0|^11.0",
+        "rappasoft/laravel-authentication-log": "^2.0|^3.0"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^7.0|^8.0|^9.0",
+        "phpunit/phpunit": "^9.0|^10.0",
+        "mockery/mockery": "^1.5"
+    },
+    "autoload": {
+        "psr-4": {
+            "CmsOrbit\\PasswordSecurity\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "CmsOrbit\\PasswordSecurity\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "CmsOrbit\\PasswordSecurity\\PasswordSecurityServiceProvider"
+            ]
+        }
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
+
