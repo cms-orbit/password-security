@@ -45,10 +45,10 @@ return [
         'min_length_2_types' => 10,         // 2가지 조합 시 최소 길이
         'min_length_3_types' => 8,          // 3가지 조합 시 최소 길이
         'min_length_4_types' => 8,          // 4가지 조합 시 최소 길이
-        'require_uppercase' => false,        // 대문자 필수 여부
-        'require_lowercase' => false,        // 소문자 필수 여부
-        'require_numbers' => false,          // 숫자 필수 여부
-        'require_special' => false,          // 특수문자 필수 여부
+        'require_uppercase' => true,        // 대문자 필수 여부 (권장: true)
+        'require_lowercase' => true,        // 소문자 필수 여부 (권장: true)
+        'require_numbers' => true,          // 숫자 필수 여부 (권장: true)
+        'require_special' => true,          // 특수문자 필수 여부 (권장: true)
         'special_characters' => '!@#$%^&*()_+-=[]{}|;:,.<>?~`', // 허용 특수문자
     ],
 
@@ -65,16 +65,16 @@ return [
         'enabled' => true,
         'block_sequential_numbers' => true,      // 연속 숫자 차단 (123456, 987654)
         'block_sequential_letters' => true,      // 연속 문자 차단 (abcdef, fedcba)
-        'block_repeated_characters' => true,     // 반복 문자 차단 (aaaaaa, 111111)
-        'repeated_char_threshold' => 3,          // 반복 허용 횟수
+        'block_repeated_characters' => true,     // 반복 문자 차단 (aaaaaa, 111111, 123123)
+        'repeated_char_threshold' => 2,          // 반복 허용 횟수 (2 = 3개 이상 반복 차단)
         'block_keyboard_patterns' => true,       // 키보드 패턴 차단 (qwerty, asdfgh)
         'block_common_words' => true,            // 일반 단어 차단
         'block_birthday_patterns' => true,       // 생일 패턴 차단 (19900101, 2000-01-01)
         'block_phone_patterns' => true,          // 전화번호 패턴 차단 (01012345678)
-        'sequential_threshold' => 4,             // 연속 문자 허용 개수
+        'sequential_threshold' => 3,             // 연속 문자 허용 개수 (3 = 4개 이상 연속 차단)
         'common_words_list' => [                 // 차단할 일반 단어
             'password', 'admin', 'welcome', 'qwerty', 'letmein',
-            '1234', '12345', '123456', '1234567', '12345678',
+            '1234', '12345', '123456', '1234567', '12345678', '123123',
             'pass', 'user', 'guest', 'test', 'demo','abc','qwer','asd'
         ],
         'keyboard_patterns' => [                 // 키보드 패턴

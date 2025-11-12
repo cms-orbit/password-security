@@ -12,6 +12,11 @@ use Illuminate\Support\Facades\Hash;
 trait HasPasswordSecurity
 {
     /**
+     * 평문 패스워드 임시 저장 (Observer에서 사용)
+     */
+    protected $plainPasswordForValidation = null;
+
+    /**
      * Boot the trait.
      */
     public static function bootHasPasswordSecurity(): void
@@ -44,6 +49,64 @@ trait HasPasswordSecurity
     }
 
     /**
+     * 패스워드 Attribute 설정 인터셉터
+     */
+    public function setAttribute($key, $value)
+    {
+        $passwordField = $this->getPasswordFieldName();
+        
+        // 패스워드 필드이고, 평문인 경우 임시 저장
+        if ($key === $passwordField && !$this->isHashedPassword($value)) {
+            $this->plainPasswordForValidation = $value;
+        }
+        
+        return parent::setAttribute($key, $value);
+    }
+
+    /**
+     * 평문 패스워드 가져오기 (Observer에서 사용)
+     */
+    public function getPlainPasswordForValidation(): ?string
+    {
+        return $this->plainPasswordForValidation;
+    }
+
+    /**
+     * 평문 패스워드 임시 저장 제거
+     */
+    public function clearPlainPasswordForValidation(): void
+    {
+        $this->plainPasswordForValidation = null;
+    }
+
+    /**
+     * 해시된 패스워드인지 확인
+     */
+    protected function isHashedPassword(?string $value): bool
+    {
+        if (!$value) {
+            return false;
+        }
+
+        // bcrypt
+        if (str_starts_with($value, '$2y$') || str_starts_with($value, '$2a$') || str_starts_with($value, '$2b$')) {
+            return true;
+        }
+
+        // argon2
+        if (str_starts_with($value, '$argon2i$') || str_starts_with($value, '$argon2id$')) {
+            return true;
+        }
+
+        // 일반적으로 해시는 60자 이상
+        if (strlen($value) >= 60) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
      * 패스워드 보안 레코드 관계 (1:1)
      */
     public function passwordSecurity(): MorphOne
@@ -65,7 +128,7 @@ trait HasPasswordSecurity
     public function createPasswordSecurity(): PasswordSecurity
     {
         $expiresInDays = config('password-security.expiration.expires_in_days', 90);
-        
+
         return $this->passwordSecurity()->create([
             'password_changed_at' => now(),
             'password_expires_at' => now()->addDays($expiresInDays),
@@ -84,12 +147,12 @@ trait HasPasswordSecurity
         if (property_exists($this, 'passwordSecurityField')) {
             return $this->passwordSecurityField;
         }
-        
+
         // 2. 메서드로 지정
         if (method_exists($this, 'passwordSecurityFieldName')) {
             return $this->passwordSecurityFieldName();
         }
-        
+
         // 3. 기본값
         return 'password';
     }
@@ -104,12 +167,12 @@ trait HasPasswordSecurity
         if (property_exists($this, 'passwordSecurityPersonalFields')) {
             return $this->passwordSecurityPersonalFields;
         }
-        
+
         // 2. 메서드로 지정
         if (method_exists($this, 'passwordSecurityPersonalFields')) {
             return $this->passwordSecurityPersonalFields();
         }
-        
+
         // 3. 기본값
         return [
             'name' => 'name',
@@ -168,7 +231,7 @@ trait HasPasswordSecurity
     /**
      * 패스워드 히스토리에 추가
      */
-    public function addPasswordToHistory(string $passwordHash, ?int $changedBy = null): void
+    public function addPasswordToHistory(string $passwordHash, $changedBy = null): void
     {
         if (!config('password-security.history.enabled')) {
             return;
@@ -213,7 +276,7 @@ trait HasPasswordSecurity
         }
 
         $checkLastN = config('password-security.history.check_last_n_passwords', 3);
-        
+
         $recentPasswords = $this->passwordHistories()
             ->orderByDesc('changed_at')
             ->limit($checkLastN)
@@ -319,7 +382,7 @@ trait HasPasswordSecurity
 
         // 제외 조건 확인
         $exclusions = config('password-security.inactive_accounts.exclusions', []);
-        
+
         // 역할 제외
         if (!empty($exclusions['roles']) && method_exists($this, 'hasRole')) {
             foreach ($exclusions['roles'] as $role) {

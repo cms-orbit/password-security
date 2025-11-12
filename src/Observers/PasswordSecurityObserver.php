@@ -31,20 +31,31 @@ class PasswordSecurityObserver
             return;
         }
 
-        $newPassword = $model->{$passwordField};
-
-        // 이미 해시된 값인지 확인 (bcrypt, argon2 등)
-        if ($this->isAlreadyHashed($newPassword)) {
-            return;
+        // Trait에서 저장한 평문 패스워드 가져오기
+        $plainPassword = null;
+        if (method_exists($model, 'getPlainPasswordForValidation')) {
+            $plainPassword = $model->getPlainPasswordForValidation();
         }
 
-        // 패스워드 검증
-        $this->validator->validate($newPassword, $model);
+        // 평문이 없으면 현재 값 확인 (mutator가 없는 경우)
+        if (!$plainPassword) {
+            $newPassword = $model->{$passwordField};
+            
+            // 이미 해시된 값이면 검증 불가능 (mutator에서 처리된 것)
+            if ($this->isAlreadyHashed($newPassword)) {
+                return;
+            }
+            
+            $plainPassword = $newPassword;
+        }
+
+        // 패스워드 검증 (평문으로!)
+        $this->validator->validate($plainPassword, $model);
 
         // 검증 통과 후 해시 처리는 모델의 mutator에 맡김
         // 단, mutator가 없으면 여기서 해시 처리
         if (!method_exists($model, 'set' . Str::studly($passwordField) . 'Attribute')) {
-            $model->{$passwordField} = Hash::make($newPassword);
+            $model->{$passwordField} = Hash::make($plainPassword);
         }
     }
 
@@ -90,6 +101,11 @@ class PasswordSecurityObserver
             $changedBy = auth()->id();
             
             $model->addPasswordToHistory($hashedPassword, $changedBy);
+        }
+
+        // 평문 패스워드 임시 저장 제거
+        if (method_exists($model, 'clearPlainPasswordForValidation')) {
+            $model->clearPlainPasswordForValidation();
         }
     }
 
