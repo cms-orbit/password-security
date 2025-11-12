@@ -19,7 +19,7 @@ return [
     |
     | HasPasswordSecurity Trait을 사용하는 모델 목록입니다.
     | 배치 작업(휴면 계정 처리, 만료 알림 등)에 사용됩니다.
-    | 
+    |
     | 참고: 각 모델에서 필드명은 다음과 같이 지정할 수 있습니다:
     | - protected $passwordSecurityField = 'password';
     | - protected $passwordSecurityPersonalFields = ['name', 'email', ...];
@@ -75,7 +75,7 @@ return [
         'common_words_list' => [                 // 차단할 일반 단어
             'password', 'admin', 'welcome', 'qwerty', 'letmein',
             '1234', '12345', '123456', '1234567', '12345678',
-            'pass', 'user', 'guest', 'test', 'demo',
+            'pass', 'user', 'guest', 'test', 'demo','abc','qwer','asd'
         ],
         'keyboard_patterns' => [                 // 키보드 패턴
             'qwerty', 'qwertyuiop', 'asdfgh', 'asdfghjkl', 'zxcvbn', 'zxcvbnm',
@@ -131,11 +131,11 @@ return [
         'notify_before_days' => [7, 3, 1],       // 만료 전 알림 (일)
         'grace_period_days' => 0,                // 만료 후 유예기간 (일)
         'force_change_on_first_login' => false,  // 첫 로그인 시 강제 변경
-        
+
         // 강제 변경 라우트 설정
         'force_change_route' => 'password.change',      // 라우트명
         'force_change_url' => '/password/change',       // 또는 URL
-        
+
         // 미들웨어 제외 라우트
         'excluded_routes' => [
             'password.change',           // 비밀번호 변경 페이지
@@ -143,7 +143,7 @@ return [
             'password.expired',          // 만료 안내 페이지
             'logout',                    // 로그아웃
         ],
-        
+
         // 미들웨어 제외 URL 패턴
         'excluded_urls' => [
             'password/*',                // 패스워드 관련 모든 URL
@@ -166,14 +166,14 @@ return [
         'notify_before_days' => [14, 7, 3],      // 비활성화 전 알림 (일)
         'auto_deactivate' => true,               // 자동 비활성화 여부
         'delete_after_days' => null,             // 비활성화 후 삭제 기간 (null이면 삭제 안함)
-        
+
         // 휴면 계정 처리 제외 조건
         'exclusions' => [
             'roles' => [],                       // 제외할 역할 (예: ['super-admin'])
             'emails' => [],                      // 제외할 이메일
             'has_active_sessions' => true,       // 활성 세션이 있으면 제외
         ],
-        
+
         // 계정 활성화 상태 필드명
         'active_field' => 'is_active',
         'deactivated_at_field' => 'deactivated_at',
@@ -204,13 +204,13 @@ return [
     'notifications' => [
         'enabled' => true,
         'channels' => ['mail'],                  // 알림 채널 (mail, database, slack 등)
-        
+
         // 만료 알림
         'expiration' => [
             'enabled' => true,
             'mail_subject' => 'Password Expiration Notice',
         ],
-        
+
         // 휴면 계정 알림
         'inactive_account' => [
             'enabled' => true,

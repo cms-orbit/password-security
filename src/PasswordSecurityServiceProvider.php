@@ -62,6 +62,17 @@ class PasswordSecurityServiceProvider extends ServiceProvider
             __DIR__.'/../config/password-security.php',
             'password-security'
         );
+
+        // 마이그레이션 파일 등록
+        $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
+
+        // 언어 파일 등록
+        $this->loadTranslationsFrom(__DIR__.'/../resources/lang', 'password-security');
+
+        // Config 파일 등록
+        $this->publishes([
+            __DIR__.'/../config/password-security.php' => config_path('password-security.php'),
+        ], 'password-security-config');
     }
 
     /**

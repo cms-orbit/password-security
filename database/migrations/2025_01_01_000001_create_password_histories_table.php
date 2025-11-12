@@ -24,7 +24,6 @@ return new class extends Migration
             $table->timestamps();
 
             // 인덱스
-            $table->index(['securable_type', 'securable_id']);
             $table->index('changed_at');
         });
     }

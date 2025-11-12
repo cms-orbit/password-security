@@ -26,7 +26,6 @@ return new class extends Migration
             $table->timestamps();
 
             // 인덱스
-            $table->index(['securable_type', 'securable_id']);
             $table->index('password_expires_at');
             $table->index('is_active');
             $table->index('last_login_at');

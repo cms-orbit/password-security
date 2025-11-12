@@ -4,6 +4,7 @@ namespace CmsOrbit\PasswordSecurity\Observers;
 
 use CmsOrbit\PasswordSecurity\Validators\PasswordValidator;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class PasswordSecurityObserver
 {
@@ -42,15 +43,31 @@ class PasswordSecurityObserver
 
         // 검증 통과 후 해시 처리는 모델의 mutator에 맡김
         // 단, mutator가 없으면 여기서 해시 처리
-        if (!method_exists($model, 'set' . studly_case($passwordField) . 'Attribute')) {
+        if (!method_exists($model, 'set' . Str::studly($passwordField) . 'Attribute')) {
             $model->{$passwordField} = Hash::make($newPassword);
         }
     }
 
     /**
-     * 모델 저장 후 처리
+     * 모델 생성 후 처리
      */
-    public function saved($model): void
+    public function created($model): void
+    {
+        $this->savePasswordHistory($model, true);
+    }
+
+    /**
+     * 모델 업데이트 후 처리
+     */
+    public function updated($model): void
+    {
+        $this->savePasswordHistory($model, false);
+    }
+
+    /**
+     * 패스워드 히스토리 저장
+     */
+    protected function savePasswordHistory($model, bool $isNewRecord): void
     {
         if (!config('password-security.enabled')) {
             return;
@@ -62,8 +79,8 @@ class PasswordSecurityObserver
 
         $passwordField = $this->getPasswordField($model);
 
-        // 패스워드 필드가 변경되었는지 확인
-        if (!$model->wasChanged($passwordField)) {
+        // 신규 생성이 아니면 패스워드가 변경되었는지 확인
+        if (!$isNewRecord && !$model->wasChanged($passwordField)) {
             return;
         }
 
