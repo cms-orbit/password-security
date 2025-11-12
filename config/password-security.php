@@ -66,7 +66,7 @@ return [
         'block_sequential_numbers' => true,      // 연속 숫자 차단 (123456, 987654)
         'block_sequential_letters' => true,      // 연속 문자 차단 (abcdef, fedcba)
         'block_repeated_characters' => true,     // 반복 문자 차단 (aaaaaa, 111111, 123123)
-        'repeated_char_threshold' => 2,          // 반복 허용 횟수 (2 = 3개 이상 반복 차단)
+        'repeated_char_threshold' => 3,          // 반복 허용 횟수 (3 = 4개 이상 반복 차단)
         'block_keyboard_patterns' => true,       // 키보드 패턴 차단 (qwerty, asdfgh)
         'block_common_words' => true,            // 일반 단어 차단
         'block_birthday_patterns' => true,       // 생일 패턴 차단 (19900101, 2000-01-01)
