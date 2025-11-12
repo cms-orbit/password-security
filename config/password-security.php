@@ -133,20 +133,20 @@ return [
         'force_change_on_first_login' => false,  // 첫 로그인 시 강제 변경
 
         // 강제 변경 라우트 설정
-        'force_change_route' => 'password.change',      // 라우트명
-        'force_change_url' => '/password/change',       // 또는 URL
+        'force_change_route' => 'password-security.change',  // 라우트명
+        'force_change_url' => '/password-security/change',   // 또는 URL
+        'redirect_after_change' => '/',                      // 변경 후 리다이렉트
 
         // 미들웨어 제외 라우트
         'excluded_routes' => [
-            'password.change',           // 비밀번호 변경 페이지
-            'password.update',           // 비밀번호 변경 처리
-            'password.expired',          // 만료 안내 페이지
+            'password-security.change',  // 비밀번호 변경 페이지
+            'password-security.update',  // 비밀번호 변경 처리
             'logout',                    // 로그아웃
         ],
 
         // 미들웨어 제외 URL 패턴
         'excluded_urls' => [
-            'password/*',                // 패스워드 관련 모든 URL
+            'password-security/*',       // 패스워드 관련 모든 URL
             'api/*',                     // API 제외
         ],
     ],
@@ -229,6 +229,33 @@ return [
     'tables' => [
         'password_securities' => 'password_securities',
         'password_histories' => 'password_histories',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Views Customization
+    |--------------------------------------------------------------------------
+    |
+    | 패키지에서 사용하는 뷰를 커스터마이징할 수 있습니다.
+    | 직접 만든 뷰를 지정하려면 view 네임스페이스를 변경하세요.
+    |
+    */
+    'views' => [
+        'password_change' => 'password-security::password-change',  // 비밀번호 변경 화면
+        'account_inactive' => 'password-security::account-inactive', // 휴면 계정 화면
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Support Contact Information
+    |--------------------------------------------------------------------------
+    |
+    | 휴면 계정 화면에 표시될 관리자 연락처 정보입니다.
+    |
+    */
+    'support' => [
+        'email' => env('PASSWORD_SECURITY_SUPPORT_EMAIL', null),
+        'phone' => env('PASSWORD_SECURITY_SUPPORT_PHONE', null),
     ],
 
 ];

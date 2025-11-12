@@ -29,22 +29,28 @@ class CheckAccountActive
 
         // 계정 활성화 상태 체크
         if (!$user->isAccountActive()) {
-            // 로그아웃 처리
-            Auth::logout();
-
-            $request->session()->invalidate();
-            $request->session()->regenerateToken();
-
             // AJAX 요청인 경우
             if ($request->expectsJson()) {
                 return response()->json([
-                    'message' => __('password-security::messages.account_deactivated'),
+                    'message' => __('Your account has been deactivated. Please contact administrator.'),
                 ], 403);
             }
 
-            // 일반 요청인 경우
-            return redirect()->route('login')
-                ->with('error', __('password-security::messages.account_deactivated'));
+            // 로그아웃 처리
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            // 휴면 계정 화면 표시
+            $viewName = config('password-security.views.account_inactive', 'password-security::account-inactive');
+            
+            $security = $user->passwordSecurity;
+            
+            return response()->view($viewName, [
+                'user' => $user,
+                'reason' => $security?->deactivation_reason ?? __('Inactivity for extended period'),
+                'deactivatedAt' => $security?->deactivated_at,
+            ], 403);
         }
 
         return $next($request);

@@ -35,8 +35,19 @@ class PasswordSecurityServiceProvider extends ServiceProvider
             __DIR__.'/../resources/lang' => $this->app->langPath('vendor/password-security'),
         ], 'password-security-lang');
 
+        // View 파일 발행
+        $this->publishes([
+            __DIR__.'/../resources/views' => resource_path('views/vendor/password-security'),
+        ], 'password-security-views');
+
         // 언어 파일 로드
         $this->loadTranslationsFrom(__DIR__.'/../resources/lang', 'password-security');
+
+        // View 파일 로드
+        $this->loadViewsFrom(__DIR__.'/../resources/views', 'password-security');
+
+        // 라우트 등록
+        $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
 
         // Commands 등록
         if ($this->app->runningInConsole()) {
