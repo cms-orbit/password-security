@@ -1,13 +1,14 @@
 {
     "name": "cms-orbit/password-security",
+    "version": "1.0.0",
     "description": "Laravel password security package with comprehensive validation rules for strong password policies",
     "keywords": ["laravel", "password", "security", "validation", "authentication"],
     "type": "library",
     "license": "MIT",
     "authors": [
         {
-            "name": "CMS Orbit",
-            "email": "dev@cms-orbit.com"
+            "name": "XisoDev",
+            "email": "ceo@amuz.co.kr"
         }
     ],
     "require": {
