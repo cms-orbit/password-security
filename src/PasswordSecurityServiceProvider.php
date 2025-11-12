@@ -46,8 +46,10 @@ class PasswordSecurityServiceProvider extends ServiceProvider
         // View 파일 로드
         $this->loadViewsFrom(__DIR__.'/../resources/views', 'password-security');
 
-        // 라우트 등록
-        $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
+        // 라우트 등록 (Nova 이후에 로드되도록)
+        $this->app->booted(function () {
+            $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
+        });
 
         // Commands 등록
         if ($this->app->runningInConsole()) {

@@ -16,9 +16,9 @@ class PasswordChangeController extends Controller
     public function showChangeForm()
     {
         $user = auth()->user();
-        
+
         $viewName = config('password-security.views.password_change', 'password-security::password-change');
-        
+
         return view($viewName, [
             'user' => $user,
         ]);
@@ -47,8 +47,8 @@ class PasswordChangeController extends Controller
         }
 
         // 현재 비밀번호 확인
-        $passwordField = method_exists($user, 'getPasswordFieldName') 
-            ? $user->getPasswordFieldName() 
+        $passwordField = method_exists($user, 'getPasswordFieldName')
+            ? $user->getPasswordFieldName()
             : 'password';
 
         if (!Hash::check($request->current_password, $user->{$passwordField})) {
@@ -69,7 +69,7 @@ class PasswordChangeController extends Controller
 
         // 성공 메시지와 함께 리다이렉트
         $redirectTo = config('password-security.expiration.redirect_after_change', '/');
-        
+
         return redirect($redirectTo)->with('success', __('Password changed successfully.'));
     }
 }

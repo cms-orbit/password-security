@@ -53,7 +53,7 @@
             </div>
 
             <div class="mt-6 text-center">
-                <form method="POST" action="{{ route('logout') }}">
+                <form method="POST" action="{{ route('auth.logout') }}">
                     @csrf
                     <button type="submit" class="w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition duration-150">
                         {{ __('Logout') }}

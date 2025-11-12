@@ -75,7 +75,7 @@ return [
         'common_words_list' => [                 // 차단할 일반 단어
             'password', 'admin', 'welcome', 'qwerty', 'letmein',
             '1234', '12345', '123456', '1234567', '12345678', '123123',
-            'pass', 'user', 'guest', 'test', 'demo','abc','qwer','asd'
+            'pass', 'user', 'guest', 'test', 'demo', 'abc', 'qwer', 'asd'
         ],
         'keyboard_patterns' => [                 // 키보드 패턴
             'qwerty', 'qwertyuiop', 'asdfgh', 'asdfghjkl', 'zxcvbn', 'zxcvbnm',
@@ -131,17 +131,14 @@ return [
         'notify_before_days' => [7, 3, 1],       // 만료 전 알림 (일)
         'grace_period_days' => 0,                // 만료 후 유예기간 (일)
         'force_change_on_first_login' => false,  // 첫 로그인 시 강제 변경
-
-        // 강제 변경 라우트 설정
-        'force_change_route' => 'password-security.change',  // 라우트명
-        'force_change_url' => '/password-security/change',   // 또는 URL
-        'redirect_after_change' => '/',                      // 변경 후 리다이렉트
+        'redirect_after_change' => '/',          // 변경 후 리다이렉트
 
         // 미들웨어 제외 라우트
         'excluded_routes' => [
             'password-security.change',  // 비밀번호 변경 페이지
             'password-security.update',  // 비밀번호 변경 처리
             'logout',                    // 로그아웃
+            'auth.logout',               // 인증 로그아웃
         ],
 
         // 미들웨어 제외 URL 패턴
@@ -150,6 +147,17 @@ return [
             'api/*',                     // API 제외
         ],
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Route Configuration
+    |--------------------------------------------------------------------------
+    |
+    | 패스워드 보안 라우트 설정입니다.
+    | 라우트명은 고정: password-security.change, password-security.update
+    |
+    */
+    'route_prefix' => env('PASSWORD_SECURITY_ROUTE_PREFIX', 'password-security'),
 
     /*
     |--------------------------------------------------------------------------

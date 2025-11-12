@@ -13,13 +13,15 @@ use CmsOrbit\PasswordSecurity\Http\Controllers\PasswordChangeController;
 |
 */
 
-Route::middleware(['web', 'auth'])->group(function () {
+$prefix = config('password-security.route_prefix', 'password-security');
+
+Route::middleware(['web', 'auth'])->prefix($prefix)->group(function () {
     // 비밀번호 변경 화면
-    Route::get('/password-security/change', [PasswordChangeController::class, 'showChangeForm'])
+    Route::get('/change', [PasswordChangeController::class, 'showChangeForm'])
         ->name('password-security.change');
 
     // 비밀번호 변경 처리
-    Route::post('/password-security/change', [PasswordChangeController::class, 'update'])
+    Route::post('/change', [PasswordChangeController::class, 'update'])
         ->name('password-security.update');
 });
 

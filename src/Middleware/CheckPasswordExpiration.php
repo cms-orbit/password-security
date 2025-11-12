@@ -38,23 +38,15 @@ class CheckPasswordExpiration
             // AJAX 요청인 경우
             if ($request->expectsJson()) {
                 return response()->json([
-                    'message' => __('password-security::messages.password_expired'),
-                    'redirect' => $this->getForceChangeUrl(),
+                    'message' => __('Your password has expired. Please change your password.'),
+                    'redirect' => route('password-security.change'),
                 ], 403);
             }
 
-            // 일반 요청인 경우
-            $route = config('password-security.expiration.force_change_route');
-            if ($route && Route::has($route)) {
-                return redirect()
-                    ->route($route)
-                    ->with('warning', __('password-security::messages.password_expired_warning'));
-            }
-
-            // 라우트가 없으면 URL로 리다이렉트
-            $url = config('password-security.expiration.force_change_url', '/password/change');
-            return redirect($url)
-                ->with('warning', __('password-security::messages.password_expired_warning'));
+            // 일반 요청인 경우 - 라우트명 고정
+            return redirect()
+                ->route('password-security.change')
+                ->with('warning', __('Your password has expired. Please change your password.'));
         }
 
         // 만료 임박 알림 (선택적)
@@ -109,17 +101,5 @@ class CheckPasswordExpiration
         return false;
     }
 
-    /**
-     * 강제 변경 URL 가져오기
-     */
-    protected function getForceChangeUrl(): string
-    {
-        $route = config('password-security.expiration.force_change_route');
-        if ($route && Route::has($route)) {
-            return route($route);
-        }
-
-        return config('password-security.expiration.force_change_url', '/password/change');
-    }
 }
 
