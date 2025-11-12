@@ -9,4 +9,3 @@ composer.lock
 .vscode/
 *.log
 test-*.php
-

@@ -120,7 +120,7 @@ class PasswordSecurityServiceProvider extends ServiceProvider
             }
 
             $security = $user->passwordSecurity;
-            
+
             if (!$security && method_exists($user, 'createPasswordSecurity')) {
                 $security = $user->createPasswordSecurity();
             }

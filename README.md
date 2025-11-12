@@ -48,7 +48,6 @@
 
 - PHP ^8.2
 - Laravel ^9.0|^10.0|^11.0
-- rappasoft/laravel-authentication-log ^2.0|^3.0
 
 ## 빠른 시작
 

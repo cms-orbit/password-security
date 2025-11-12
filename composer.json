@@ -14,8 +14,7 @@
         "php": "^8.2",
         "illuminate/support": "^9.0|^10.0|^11.0",
         "illuminate/database": "^9.0|^10.0|^11.0",
-        "illuminate/validation": "^9.0|^10.0|^11.0",
-        "rappasoft/laravel-authentication-log": "^2.0|^3.0"
+        "illuminate/validation": "^9.0|^10.0|^11.0"
     },
     "require-dev": {
         "orchestra/testbench": "^7.0|^8.0|^9.0",
