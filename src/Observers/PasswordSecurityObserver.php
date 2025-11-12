@@ -31,31 +31,58 @@ class PasswordSecurityObserver
             return;
         }
 
-        // Trait에서 저장한 평문 패스워드 가져오기
+        // 1. Trait에서 __set으로 캡처한 평문 가져오기
         $plainPassword = null;
         if (method_exists($model, 'getPlainPasswordForValidation')) {
             $plainPassword = $model->getPlainPasswordForValidation();
         }
 
-        // 평문이 없으면 현재 값 확인 (mutator가 없는 경우)
+        // 2. 평문이 없으면 현재 attributes에서 직접 가져오기 (dirty 상태)
+        if (!$plainPassword && isset($model->getAttributes()[$passwordField])) {
+            $currentValue = $model->getAttributes()[$passwordField];
+            
+            if (!$this->isAlreadyHashed($currentValue)) {
+                $plainPassword = $currentValue;
+                
+                // Trait에 저장 (나중에 history에서 사용)
+                if (method_exists($model, 'setPlainPasswordForValidation')) {
+                    $model->setPlainPasswordForValidation($plainPassword);
+                }
+            }
+        }
+
+        // 3. 여전히 없으면 모델의 magic getter로 시도
         if (!$plainPassword) {
             $newPassword = $model->{$passwordField};
             
-            // 이미 해시된 값이면 검증 불가능 (mutator에서 처리된 것)
-            if ($this->isAlreadyHashed($newPassword)) {
-                return;
+            if (!$this->isAlreadyHashed($newPassword)) {
+                $plainPassword = $newPassword;
+                
+                if (method_exists($model, 'setPlainPasswordForValidation')) {
+                    $model->setPlainPasswordForValidation($plainPassword);
+                }
             }
-            
-            $plainPassword = $newPassword;
+        }
+
+        // 4. 해시된 값만 있으면 검증 불가능 (경고 로그)
+        if (!$plainPassword) {
+            \Log::warning('Password security: Unable to validate password, already hashed', [
+                'model' => get_class($model),
+                'id' => $model->getKey(),
+            ]);
+            return;
         }
 
         // 패스워드 검증 (평문으로!)
         $this->validator->validate($plainPassword, $model);
 
         // 검증 통과 후 해시 처리는 모델의 mutator에 맡김
-        // 단, mutator가 없으면 여기서 해시 처리
-        if (!method_exists($model, 'set' . Str::studly($passwordField) . 'Attribute')) {
-            $model->{$passwordField} = Hash::make($plainPassword);
+        // 단, mutator가 없고 아직 평문이면 여기서 해시 처리
+        $currentValue = $model->getAttributes()[$passwordField] ?? null;
+        if ($currentValue && !$this->isAlreadyHashed($currentValue)) {
+            if (!method_exists($model, 'set' . Str::studly($passwordField) . 'Attribute')) {
+                $model->{$passwordField} = Hash::make($plainPassword);
+            }
         }
     }
 
@@ -99,7 +126,7 @@ class PasswordSecurityObserver
         if (method_exists($model, 'addPasswordToHistory')) {
             $hashedPassword = $model->{$passwordField};
             $changedBy = auth()->id();
-            
+
             $model->addPasswordToHistory($hashedPassword, $changedBy);
         }
 

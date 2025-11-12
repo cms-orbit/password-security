@@ -49,18 +49,18 @@ trait HasPasswordSecurity
     }
 
     /**
-     * 패스워드 Attribute 설정 인터셉터
+     * Magic setter to intercept password changes
      */
-    public function setAttribute($key, $value)
+    public function __set($key, $value)
     {
         $passwordField = $this->getPasswordFieldName();
         
         // 패스워드 필드이고, 평문인 경우 임시 저장
-        if ($key === $passwordField && !$this->isHashedPassword($value)) {
+        if ($key === $passwordField && is_string($value) && !$this->isHashedPassword($value)) {
             $this->plainPasswordForValidation = $value;
         }
         
-        return parent::setAttribute($key, $value);
+        parent::__set($key, $value);
     }
 
     /**
@@ -69,6 +69,14 @@ trait HasPasswordSecurity
     public function getPlainPasswordForValidation(): ?string
     {
         return $this->plainPasswordForValidation;
+    }
+
+    /**
+     * 평문 패스워드 저장 (Observer에서 직접 설정)
+     */
+    public function setPlainPasswordForValidation(?string $password): void
+    {
+        $this->plainPasswordForValidation = $password;
     }
 
     /**
@@ -82,7 +90,7 @@ trait HasPasswordSecurity
     /**
      * 해시된 패스워드인지 확인
      */
-    protected function isHashedPassword(?string $value): bool
+    public function isHashedPassword(?string $value): bool
     {
         if (!$value) {
             return false;
