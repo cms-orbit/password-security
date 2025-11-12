@@ -40,10 +40,10 @@ class PasswordSecurityObserver
         // 2. 평문이 없으면 현재 attributes에서 직접 가져오기 (dirty 상태)
         if (!$plainPassword && isset($model->getAttributes()[$passwordField])) {
             $currentValue = $model->getAttributes()[$passwordField];
-            
+
             if (!$this->isAlreadyHashed($currentValue)) {
                 $plainPassword = $currentValue;
-                
+
                 // Trait에 저장 (나중에 history에서 사용)
                 if (method_exists($model, 'setPlainPasswordForValidation')) {
                     $model->setPlainPasswordForValidation($plainPassword);
@@ -54,10 +54,10 @@ class PasswordSecurityObserver
         // 3. 여전히 없으면 모델의 magic getter로 시도
         if (!$plainPassword) {
             $newPassword = $model->{$passwordField};
-            
+
             if (!$this->isAlreadyHashed($newPassword)) {
                 $plainPassword = $newPassword;
-                
+
                 if (method_exists($model, 'setPlainPasswordForValidation')) {
                     $model->setPlainPasswordForValidation($plainPassword);
                 }
@@ -66,10 +66,6 @@ class PasswordSecurityObserver
 
         // 4. 해시된 값만 있으면 검증 불가능 (경고 로그)
         if (!$plainPassword) {
-            \Log::warning('Password security: Unable to validate password, already hashed', [
-                'model' => get_class($model),
-                'id' => $model->getKey(),
-            ]);
             return;
         }
 
