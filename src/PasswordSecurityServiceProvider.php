@@ -9,6 +9,9 @@ use CmsOrbit\PasswordSecurity\Middleware\CheckPasswordExpiration;
 use CmsOrbit\PasswordSecurity\Observers\PasswordSecurityObserver;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Routing\Router;
+use Illuminate\Console\Scheduling\Schedule;
+use Illuminate\Support\Facades\Event;
+use Illuminate\Auth\Events\Login;
 
 class PasswordSecurityServiceProvider extends ServiceProvider
 {
@@ -50,6 +53,12 @@ class PasswordSecurityServiceProvider extends ServiceProvider
 
         // Observer 등록
         $this->registerObservers();
+
+        // 로그인 이벤트 리스닝 (last_login_at 업데이트)
+        $this->registerLoginListener();
+
+        // 스케줄러 등록
+        $this->registerSchedule();
     }
 
     /**
@@ -91,6 +100,66 @@ class PasswordSecurityServiceProvider extends ServiceProvider
                 $model::observe(PasswordSecurityObserver::class);
             }
         }
+    }
+
+    /**
+     * 로그인 이벤트 리스너 등록 (last_login_at 업데이트)
+     */
+    protected function registerLoginListener(): void
+    {
+        if (!config('password-security.enabled')) {
+            return;
+        }
+
+        Event::listen(Login::class, function (Login $event) {
+            $user = $event->user;
+
+            // HasPasswordSecurity 트레이트를 사용하는 모델만 처리
+            if (!method_exists($user, 'passwordSecurity')) {
+                return;
+            }
+
+            $security = $user->passwordSecurity;
+            
+            if (!$security && method_exists($user, 'createPasswordSecurity')) {
+                $security = $user->createPasswordSecurity();
+            }
+
+            if ($security) {
+                $security->last_login_at = now();
+                $security->save();
+            }
+        });
+    }
+
+    /**
+     * 스케줄러 등록
+     */
+    protected function registerSchedule(): void
+    {
+        if (!config('password-security.enabled')) {
+            return;
+        }
+
+        $this->app->booted(function () {
+            $schedule = $this->app->make(Schedule::class);
+
+            // 매일 오전 2시에 휴면 계정 비활성화
+            if (config('password-security.inactive_accounts.enabled')) {
+                $schedule->command('password-security:deactivate-inactive')
+                    ->dailyAt('02:00')
+                    ->withoutOverlapping()
+                    ->onOneServer();
+            }
+
+            // 매일 오전 9시에 패스워드 만료 알림
+            if (config('password-security.expiration.enabled')) {
+                $schedule->command('password-security:notify-expiration')
+                    ->dailyAt('09:00')
+                    ->withoutOverlapping()
+                    ->onOneServer();
+            }
+        });
     }
 }
 

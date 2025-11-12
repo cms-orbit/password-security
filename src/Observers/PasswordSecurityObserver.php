@@ -155,7 +155,7 @@ class PasswordSecurityObserver
         }
 
         $security = $model->passwordSecurity;
-        
+
         // passwordSecurity 레코드가 없으면 생성
         if (!$security && method_exists($model, 'createPasswordSecurity')) {
             $security = $model->createPasswordSecurity();
