@@ -96,6 +96,7 @@ class PasswordSecurityObserver
     public function updated($model): void
     {
         $this->savePasswordHistory($model, false);
+        $this->updatePasswordSecurity($model);
     }
 
     /**
@@ -129,6 +130,48 @@ class PasswordSecurityObserver
         // 평문 패스워드 임시 저장 제거
         if (method_exists($model, 'clearPlainPasswordForValidation')) {
             $model->clearPlainPasswordForValidation();
+        }
+    }
+
+    /**
+     * PasswordSecurity 레코드 업데이트 (변경일, 만료일)
+     */
+    protected function updatePasswordSecurity($model): void
+    {
+        if (!config('password-security.enabled')) {
+            return;
+        }
+
+        $passwordField = $this->getPasswordField($model);
+
+        // 패스워드가 변경되지 않았으면 리턴
+        if (!$model->wasChanged($passwordField)) {
+            return;
+        }
+
+        // passwordSecurity 관계 확인
+        if (!method_exists($model, 'passwordSecurity')) {
+            return;
+        }
+
+        $security = $model->passwordSecurity;
+        
+        // passwordSecurity 레코드가 없으면 생성
+        if (!$security && method_exists($model, 'createPasswordSecurity')) {
+            $security = $model->createPasswordSecurity();
+        }
+
+        if ($security) {
+            $security->password_changed_at = now();
+            $security->password_must_change = false;
+
+            // 만료일 재계산
+            if (config('password-security.expiration.enabled')) {
+                $expiresInDays = config('password-security.expiration.expires_in_days', 90);
+                $security->password_expires_at = now()->addDays($expiresInDays);
+            }
+
+            $security->save();
         }
     }
 
