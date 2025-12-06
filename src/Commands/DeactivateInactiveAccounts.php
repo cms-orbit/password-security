@@ -450,7 +450,12 @@ class DeactivateInactiveAccounts extends Command
             $inactiveDays = method_exists($user, 'getFreezeInactiveDays')
                 ? $user->getFreezeInactiveDays()
                 : 90;
-            $user->notify(new AccountDeactivatedNotification(0, true, $inactiveDays));
+
+            try {
+                Notification::send($user, new AccountDeactivatedNotification(0, true, $inactiveDays));
+            } catch (\Throwable $e) {
+                $this->error("  알림 발송 실패: " . ($user->email ?? $user->id ?? 'Unknown') . " - " . $e->getMessage());
+            }
         }
     }
 
