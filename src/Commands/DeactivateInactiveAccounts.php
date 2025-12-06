@@ -6,6 +6,7 @@ use CmsOrbit\PasswordSecurity\Notifications\AccountDeactivatedNotification;
 use CmsOrbit\PasswordSecurity\Traits\HasFreezePolicy;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 use Carbon\Carbon;
 
 class DeactivateInactiveAccounts extends Command
@@ -225,7 +226,7 @@ class DeactivateInactiveAccounts extends Command
         }
 
         // 알림 발송
-        if ($this->option('notify') && config('password-security.notifications.enabled')) {
+        if ($this->option('notify') || config('password-security.notifications.enabled')) {
             foreach ($allNotifyTargets as $user) {
                 $this->notifyUser($user);
                 $notified++;
@@ -505,9 +506,12 @@ class DeactivateInactiveAccounts extends Command
             $inactiveDays = 90;
         }
 
-        $user->notify(new AccountDeactivatedNotification($daysRemaining, false, $inactiveDays));
-        $email = $user->email ?? $user->id ?? 'Unknown';
-        $this->line("  알림 발송: {$email} (D-{$daysRemaining})");
+        // Eloquent 모델에서 notify() 메서드가 없을 때는 Notification 파사드를 통해 직접 알림을 보냅니다.
+        try {
+            Notification::send($user, new AccountDeactivatedNotification($daysRemaining, false, $inactiveDays));
+        } catch (\Throwable $e) {
+            $this->error("  알림 발송 실패: " . ($user->email ?? $user->id ?? 'Unknown') . " - " . $e->getMessage());
+        }
     }
 }
 
