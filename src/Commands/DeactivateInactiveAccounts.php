@@ -452,7 +452,7 @@ class DeactivateInactiveAccounts extends Command
                 : 90;
 
             try {
-                Notification::send($user, new AccountDeactivatedNotification(0, true, $inactiveDays));
+                Notification::sendNow($user, new AccountDeactivatedNotification(0, true, $inactiveDays));
             } catch (\Throwable $e) {
                 $this->error("  알림 발송 실패: " . ($user->email ?? $user->id ?? 'Unknown') . " - " . $e->getMessage());
             }
@@ -512,8 +512,11 @@ class DeactivateInactiveAccounts extends Command
         }
 
         // Eloquent 모델에서 notify() 메서드가 없을 때는 Notification 파사드를 통해 직접 알림을 보냅니다.
+        // sendNow()를 사용하여 큐 없이 즉시 발송합니다.
         try {
-            Notification::send($user, new AccountDeactivatedNotification($daysRemaining, false, $inactiveDays));
+            Notification::sendNow($user, new AccountDeactivatedNotification($daysRemaining, false, $inactiveDays));
+            $email = $user->email ?? $user->id ?? 'Unknown';
+            $this->line("  알림 발송: {$email} (D-{$daysRemaining})");
         } catch (\Throwable $e) {
             $this->error("  알림 발송 실패: " . ($user->email ?? $user->id ?? 'Unknown') . " - " . $e->getMessage());
         }

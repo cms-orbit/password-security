@@ -581,6 +581,12 @@ MIT 라이선스입니다. 자세한 내용은 [LICENSE](LICENSE) 파일을 참�
 
 ## 변경 이력
 
+### 1.1.3 (2025-12-06)
+
+- 알림 즉시 발송 기능 추가
+- Notification::sendNow() 사용으로 큐 없이 즉시 발송
+- ShouldQueue 인터페이스로 인한 지연 발송 문제 해결
+
 ### 1.1.2 (2025-12-06)
 
 - deactivateUser() 메서드에서도 Notification 파사드 사용으로 변경
