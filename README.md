@@ -38,9 +38,12 @@ Laravel 애플리케이션을 위한 포괄적인 패스워드 보안 관리 패
 
 ### 💤 휴면 계정 관리
 - 일정 기간 미사용 계정 자동 비활성화
-- 비활성화 전 알림 발송
+- 비활성화 전 알림 발송 (14일, 7일, 3일 전)
+- 비활성화 후 자동 삭제 (설정 가능)
+- SoftDeletes 모델의 강제삭제 지원
 - 역할 및 이메일 기반 제외 규칙
-- 자동 삭제 옵션
+- Central/Tenant 모델 지원
+- Chunk 처리 및 상세 진행 상황 표시
 
 ### 🔔 알림 시스템
 - 패스워드 만료 알림
@@ -243,6 +246,32 @@ if ($user->isPasswordInHistory($newPassword)) {
 
 // 마지막 로그인 업데이트
 $user->updateLastLogin();
+
+// 휴면 계정 관리 (HasFreezePolicy trait 사용 시)
+// 계정이 휴면 상태인지 확인
+if ($user->isFrozen()) {
+    // 휴면 상태
+}
+
+// 계정을 휴면 상태로 설정
+$user->freeze();
+
+// 계정을 활성 상태로 복구
+$user->unfreeze();
+
+// 활성화 상태 기준일 가져오기
+$baseDate = $user->getDaysUntilFreeze();
+
+// 휴면 기준일 가져오기
+$inactiveDays = $user->getFreezeInactiveDays();
+
+// 비활성화 전 알림 일자들 가져오기
+$notifyBeforeDays = $user->getFreezeNotifyBeforeDays();
+
+// 제외 여부 확인
+if ($user->isExclusion()) {
+    // 휴면 대상에서 제외됨
+}
 ```
 
 ## Artisan 명령어
@@ -260,24 +289,32 @@ php artisan password-security:notify-expiration --dry-run
 php artisan password-security:notify-expiration --force-change
 ```
 
-### 휴면 계정 비활성화
+### 휴면 계정 관리
 
 ```bash
 # 일반 실행
-php artisan password-security:deactivate-inactive
+php artisan password-security:freeze
 
-# Dry-run (실제 비활성화 없이 확인)
-php artisan password-security:deactivate-inactive --dry-run
+# Dry-run (실제 처리 없이 확인)
+php artisan password-security:freeze --dry-run
 
 # 비활성화 전 알림 발송
-php artisan password-security:deactivate-inactive --notify
+php artisan password-security:freeze --notify
 ```
+
+이 명령어는 다음 작업을 수행합니다:
+- **비활성화**: 기준일 + 휴면기준일이 지난 활성 계정을 비활성화
+- **삭제**: 비활성화 후 삭제기간이 지난 계정을 삭제
+- **강제삭제**: SoftDeletes 모델에서 강제삭제기간이 지난 소프트 삭제된 계정을 완전 삭제
+- **알림**: 비활성화 전 알림 대상자에게 알림 발송
+
+명령어 실행 시 각 모델별로 100개씩 chunk로 처리하며, 각 chunk마다 상세한 진행 상황을 테이블로 표시합니다.
 
 ## 스케줄러 설정
 
 패키지는 자동으로 스케줄러를 등록합니다. `app/Console/Kernel.php`에 추가 설정이 필요하지 않습니다.
 
-- **매일 오전 2시**: 휴면 계정 비활성화 (`password-security:deactivate-inactive`)
+- **매일 오전 2시**: 휴면 계정 관리 (`password-security:freeze`)
 - **매일 오전 9시**: 패스워드 만료 알림 (`password-security:notify-expiration`)
 
 스케줄러를 실행하려면 cron에 다음을 추가하세요:
@@ -368,18 +405,58 @@ php artisan password-security:deactivate-inactive --notify
 ```php
 'inactive_accounts' => [
     'enabled' => true,
-    'inactive_days' => 90,                   // 휴면 기준 (일)
-    'notify_before_days' => [14, 7, 3],      // 비활성화 전 알림
-    'auto_deactivate' => true,               // 자동 비활성화
-    'delete_after_days' => null,             // 삭제 기간 (null=삭제안함)
-    'exclusions' => [
-        'roles' => [],                       // 제외할 역할
-        'emails' => [],                      // 제외할 이메일
-        'has_active_sessions' => true,       // 활성 세션 제외
+    'target_models' => [
+        \AppCentral\Models\User::class,
     ],
-    'active_field' => 'is_active',
-    'deactivated_at_field' => 'deactivated_at',
+    'target_tenant_models' => [
+        \AppTenants\Models\Promoter::class,
+    ],
 ],
+```
+
+각 모델에서 `HasFreezePolicy` trait를 사용하여 개별 설정이 가능합니다:
+
+```php
+use CmsOrbit\PasswordSecurity\Traits\HasFreezePolicy;
+
+class User extends Authenticatable
+{
+    use HasFreezePolicy;
+    
+    // 휴면 기준일 (기본값: 90일)
+    protected $freezeInactiveDays = 90;
+    // 또는 메서드로
+    public function getFreezeInactiveDays(): int
+    {
+        return 90;
+    }
+    
+    // 비활성화 전 알림 일자들 (기본값: [14, 7, 3])
+    protected $freezeNotifyBeforeDays = [14, 7, 3];
+    
+    // 비활성화 후 삭제기간 (기본값: 7일, null이면 삭제 안 함)
+    protected $freezeDeleteAfterDays = 7;
+    
+    // 강제삭제 기간 (SoftDeletes 모델용, 기본값: 5일)
+    protected $freezeForceDeleteAfterDays = 5;
+    
+    // 계정활성화 상태 필드명 (기본값: 'is_freeze')
+    protected $freezeStatusField = 'is_freeze';
+    
+    // 휴면대상에서 제외할 모델인지 판별
+    public function isExclusion(): bool
+    {
+        // 특정 조건에 따라 제외
+        return $this->hasRole('admin');
+    }
+    
+    // 활성화 상태 기준일 반환 (마지막 로그인일 또는 생성일)
+    public function getDaysUntilFreeze(): \Carbon\Carbon
+    {
+        $lastLoginAt = $this->lastLoginAt();
+        return $lastLoginAt ? \Carbon\Carbon::parse($lastLoginAt) : $this->created_at;
+    }
+}
 ```
 
 ### 알림 설정
@@ -504,6 +581,20 @@ MIT 라이선스입니다. 자세한 내용은 [LICENSE](LICENSE) 파일을 참�
 
 ## 변경 이력
 
+### 1.1.0 (2025-12-06)
+
+- 휴면 계정 관리 기능 대폭 개선
+- `HasFreezePolicy` trait 추가
+- 모델별 개별 휴면 정책 설정 지원
+- 비활성화 후 자동 삭제 기능
+- SoftDeletes 모델의 강제삭제 지원
+- Central/Tenant 모델 지원
+- Chunk 처리 및 상세 진행 상황 표시
+- `password-security:freeze` 명령어로 통합
+- `is_freeze` 필드 기반 휴면 상태 관리
+- `getDaysUntilFreeze()` 메서드로 기준일 관리
+- `isExclusion()` 메서드로 제외 규칙 커스터마이징
+
 ### 1.0.0 (2025-01-12)
 
 - 최초 안정 버전 릴리스
@@ -512,28 +603,4 @@ MIT 라이선스입니다. 자세한 내용은 [LICENSE](LICENSE) 파일을 참�
 - 개인정보 포함 차단
 - 패스워드 히스토리 관리
 - 패스워드 만료 관리
-- 휴면 계정 관리
 - 알림 시스템
-- Laravel Nova 통합
-- 다국어 지원 (한국어, 영어)
-
-## 지원
-
-- 이슈: [GitHub Issues](https://github.com/cms-orbit/password-security/issues)
-- 이메일: dev@cms-orbit.com
-
-## 기여
-
-Pull Request는 언제나 환영합니다! 기여하기 전에 이슈를 먼저 열어 변경사항에 대해 논의해주세요.
-
-## 로드맵
-
-향후 추가 예정 기능:
-
-- [ ] 2FA (Two-Factor Authentication) 통합
-- [ ] 패스워드 강도 미터 컴포넌트
-- [ ] 소셜 로그인 통합
-- [ ] 추가 언어 지원
-- [ ] 관리자 대시보드
-- [ ] 감사 로그 강화
-

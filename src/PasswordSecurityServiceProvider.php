@@ -106,7 +106,7 @@ class PasswordSecurityServiceProvider extends ServiceProvider
             return;
         }
 
-        $models = config('password-security.models', []);
+        $models = config('password-security.observe_models', []);
 
         foreach ($models as $model) {
             if (class_exists($model)) {
@@ -159,7 +159,7 @@ class PasswordSecurityServiceProvider extends ServiceProvider
 
             // 매일 오전 2시에 휴면 계정 비활성화
             if (config('password-security.inactive_accounts.enabled')) {
-                $schedule->command('password-security:deactivate-inactive')
+                $schedule->command('password-security:freeze')
                     ->dailyAt('02:00')
                     ->withoutOverlapping()
                     ->onOneServer();

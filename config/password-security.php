@@ -14,20 +14,14 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Target Models
+    | Observe Models
     |--------------------------------------------------------------------------
     |
-    | HasPasswordSecurity Trait을 사용하는 모델 목록입니다.
-    | 배치 작업(휴면 계정 처리, 만료 알림 등)에 사용됩니다.
-    |
-    | 참고: 각 모델에서 필드명은 다음과 같이 지정할 수 있습니다:
-    | - protected $passwordSecurityField = 'password';
-    | - protected $passwordSecurityPersonalFields = ['name', 'email', ...];
+    | 패스워드 보안 기능을 적용할 모델 목록입니다.
     |
     */
-    'models' => [
-        // \App\Models\User::class,
-        // \AppTenants\Models\Promoter::class,
+    'observe_models' => [
+        // App\Models\User::class,
     ],
 
     /*
@@ -170,21 +164,12 @@ return [
     */
     'inactive_accounts' => [
         'enabled' => true,
-        'inactive_days' => 90,                   // 휴면 기준 (일)
-        'notify_before_days' => [14, 7, 3],      // 비활성화 전 알림 (일)
-        'auto_deactivate' => true,               // 자동 비활성화 여부
-        'delete_after_days' => null,             // 비활성화 후 삭제 기간 (null이면 삭제 안함)
-
-        // 휴면 계정 처리 제외 조건
-        'exclusions' => [
-            'roles' => [],                       // 제외할 역할 (예: ['super-admin'])
-            'emails' => [],                      // 제외할 이메일
-            'has_active_sessions' => true,       // 활성 세션이 있으면 제외
+        'target_models' => [
+            // AppCentral\Models\User::class,
         ],
-
-        // 계정 활성화 상태 필드명
-        'active_field' => 'is_active',
-        'deactivated_at_field' => 'deactivated_at',
+        'target_tenant_models' => [
+            // AppTenants\Models\User::class,
+        ]
     ],
 
     /*
